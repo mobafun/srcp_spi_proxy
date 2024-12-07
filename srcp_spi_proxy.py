@@ -1,19 +1,29 @@
 #!/usr/bin/python
 
-import socket
 import sys
-import time
+import argparse
 
 from srcp_spi_fb import SRCPSock, RocrailProxy, MCP23S17Sensor  
 
 if __name__ == "__main__":
-    sensor1 = MCP23S17Sensor(bus=0x0a,ce=0x00,
-                deviceID=0x00,mask=0b0000000000111111)
+    parser = argparse.ArgumentParser(
+                    prog='srcp_spi_proxy',
+                    description='Loop in SPI feedback into srcpd communication with rocrail')
+    
+    parser.add_argument('--bus', type=int, default=0, help='SPI bus')
+    parser.add_argument('--ce', type=int, default=0, help='Clock enable pin')
+    parser.add_argument('--dev', type=int, default=0, help='SPI device id')
+    parser.add_argument('reqport', type=int, help='Rocrail request port (4304)')
+    parser.add_argument('srcpdport', type=int, help='Srcpd daemon port (4303)')
+    args = parser.parse_args(sys.argv)
+
+    sensor1 = MCP23S17Sensor(bus=args['bus'], ce=args['ce'],
+                deviceID=args['dev'])
     
     # move srcp to the non-standard port
-    srcpSock = SRCPSock('localhost', 4304)
+    srcpSock = SRCPSock('localhost', args['reqport'])
     srcpSock.connect()
 
     # make proxy available on srcp standard port
-    proxy = RocrailProxy('localhost', 4303, sensors=[ sensor1 ])
+    proxy = RocrailProxy('localhost', args['srcpdport'], sensors=[ sensor1 ])
     proxy.forward(srcpSock)

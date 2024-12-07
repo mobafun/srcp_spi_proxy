@@ -10,18 +10,17 @@ class MCP23S17Sensor(MCP23S17):
     NUM_QUERIES = 7
     MAJORITY    = 3
 
-    def __init__(self, bus=0, ce=0, deviceID=0x00, mask=0xff):
+    def __init__(self, bus=0, ce=0, deviceID=0x00):
         """ Constructor
         Initializes only masked pins as sensor input
         Keyword arguments:
         bus The SPI bus number
         
         
-        The chip-enable number for the SPI
+        The chip-enable pin for the SPI
         deviceID The device ID of the component, i.e., the hardware address (default 0.0)
         mask the GPIO pins to sensor on"""
         super().__init__(bus, ce, deviceID)
-        self.mask = mask
         self._resetSensor()
 
     def open(self):
@@ -29,8 +28,9 @@ class MCP23S17Sensor(MCP23S17):
         Set all pins as input, enable pullout, invert logic.  
         """
         super().open()
-        self._writeRegister(MCP23S17.MCP23S17_IPOLA, self.mask & 0xff)
-        self._writeRegister(MCP23S17.MCP23S17_IPOLB, self.mask >> 8)
+        # all pins input with pullup
+        self._writeRegister(MCP23S17.MCP23S17_IPOLA, 0xff)
+        self._writeRegister(MCP23S17.MCP23S17_IPOLB, 0xff)
         self._resetSensor()
 
 
